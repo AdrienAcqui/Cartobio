@@ -1,0 +1,335 @@
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>nam.R map</title>
+    <link rel="stylesheet" href="./Leaflet-1.3.1/leaflet.css"/>
+    <link rel="stylesheet" href="./css/leaflet-search.css"/>
+    <link href="./css/font-awesome.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="./css/leaflet.awesome-markers.css">
+    <link rel="stylesheet" href="./css/bootstrap.min.css">
+    <script src="./js/leaflet.awesome-markers.js"></script>
+    <script src="./Leaflet-1.3.1/leaflet.js"></script>
+    <script src="./js/jquery-3.3.1.min.js"></script>
+    <script src="./js/leaflet-search.js"></script>
+    <script src="./js/leaflet-pip.js"></script>
+    <style>
+    #map{ height: 100%}
+    </style>
+</head>
+<body>
+
+    <div class="btn-group">
+        <button type="button" id="all" class="btn btn-success">All</button> 
+        <button type="button" id="10cm" class="btn btn-success">&lt;10cm</button> 
+        <button type="button" id="10cm-20cm" class="btn btn-success">10cm-20cm</button>
+        <button type="button" id="20cm-50cm" class="btn btn-primary">20cm-50cm</button>
+        <button type="button" id="50cm-1m" class="btn btn-primary">50cm-1m</button>
+        <button type="button" id="1m-5m" class="btn btn-danger">1m-5m</button> 
+        <button type="button" id="5m-10m" class="btn btn-danger">5m-10m</button> 
+        <button type="button" id="10m-20m" class="btn btn-danger">10m-20m</button>   
+        <button type="button" id="20m" class="btn btn-danger">&gt;20m</button> 
+        <button type="button" id="other" class="btn btn-danger">No value</button>             
+    </div>
+
+    <div id="map"></div>
+
+    <script>
+    
+    // initialize the map
+    var map = L.map('map').setView([46.82863469527167,2.43896484375], 6)
+    
+    // load a tile layer
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+        {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            minZoom: 5
+        }).addTo(map);
+    
+    // load GeoJSON from an external file
+    $.getJSON("data.geojson",function(data) {
+        // add GeoJSON layer to the map once the file is loaded
+        geojson = new L.geoJson(data).on('click', function(e) {
+            // look through each layer in order and see if the clicked point,
+            // e.latlng, overlaps with one of the shapes in it
+            match = leafletPip.pointInLayer(e.latlng, geojson, false);
+            handleClick(e);
+        }).addTo(map);
+
+        tencm = new L.geoJson(data, {
+            filter: function(feature, layer) {
+                return feature.properties.resolutionCategory == "< 10cm";
+            }
+        }).on('click', function(e) {
+            match = leafletPip.pointInLayer(e.latlng, tencm, false);
+            handleClick(e);
+        });
+        
+        twentycm = new L.geoJson(data, {
+            filter: function(feature, layer) {
+                return feature.properties.resolutionCategory == "10cm - 20cm";
+            }
+        }).on('click', function(e) {
+            match = leafletPip.pointInLayer(e.latlng, twentycm, false);
+            handleClick(e);
+        });
+
+        fiftycm = new L.geoJson(data, {
+            filter: function(feature, layer) {
+                return feature.properties.resolutionCategory == "20cm - 50cm";
+            }
+        }).on('click', function(e) {
+            match = leafletPip.pointInLayer(e.latlng, fiftycm, false);
+            handleClick(e);
+        });
+
+        onem = new L.geoJson(data, {
+            filter: function(feature, layer) {
+                return feature.properties.resolutionCategory == "50cm - 1m";
+            }
+        }).on('click', function(e) {
+            match = leafletPip.pointInLayer(e.latlng, onem, false);
+            handleClick(e);
+        });
+
+        fivem = new L.geoJson(data, {
+            filter: function(feature, layer) {
+                return feature.properties.resolutionCategory == "1m - 5m";
+            }
+        }).on('click', function(e) {
+            match = leafletPip.pointInLayer(e.latlng, fivem, false);
+            handleClick(e);
+        });
+
+        tenm = new L.geoJson(data, {
+            filter: function(feature, layer) {
+                return feature.properties.resolutionCategory == "5m - 10m";
+            }
+        }).on('click', function(e) {
+            match = leafletPip.pointInLayer(e.latlng, tenm, false);
+            handleClick(e);
+        });
+
+        twentym = new L.geoJson(data, {
+            filter: function(feature, layer) {
+                return feature.properties.resolutionCategory == "10m - 20m";
+            }
+        }).on('click', function(e) {
+            match = leafletPip.pointInLayer(e.latlng, twentym, false);
+            handleClick(e);
+        });
+
+        largem = new L.geoJson(data, {
+            filter: function(feature, layer) {
+                return feature.properties.resolutionCategory == "> 20m";
+            }
+        }).on('click', function(e) {
+            match = leafletPip.pointInLayer(e.latlng, largem, false);
+            handleClick(e);
+        });
+
+        other = new L.geoJson(data, {
+            filter: function(feature, layer) {
+                return feature.properties.resolutionCategory == "";
+            }
+        }).on('click', function(e) {
+            match = leafletPip.pointInLayer(e.latlng, other, false);
+            handleClick(e);
+        });
+    
+    })
+    
+        $("#all").click(function() {
+            map.removeLayer(tencm)
+            map.removeLayer(twentycm)
+            map.removeLayer(fiftycm)
+            map.removeLayer(onem)
+            map.removeLayer(fivem)
+            map.removeLayer(tenm)
+            map.removeLayer(twentym)
+            map.removeLayer(largem)
+            map.removeLayer(other)
+            map.addLayer(geojson)
+        });
+
+        $("#10cm").click(function() {
+            map.removeLayer(geojson)
+            map.removeLayer(twentycm)
+            map.removeLayer(fiftycm)
+            map.removeLayer(onem)
+            map.removeLayer(fivem)
+            map.removeLayer(tenm)
+            map.removeLayer(twentym)
+            map.removeLayer(largem)
+            map.removeLayer(other)
+            map.addLayer(tencm)
+        });
+
+        $("#10cm-20cm").click(function() {
+            map.removeLayer(tencm)
+            map.removeLayer(geojson)
+            map.removeLayer(fiftycm)
+            map.removeLayer(onem)
+            map.removeLayer(fivem)
+            map.removeLayer(tenm)
+            map.removeLayer(twentym)
+            map.removeLayer(largem)
+            map.removeLayer(other)
+            map.addLayer(twentycm)
+        });
+
+        $("#20cm-50cm").click(function() {
+            map.removeLayer(tencm)
+            map.removeLayer(twentycm)
+            map.removeLayer(geojson)
+            map.removeLayer(onem)
+            map.removeLayer(fivem)
+            map.removeLayer(tenm)
+            map.removeLayer(twentym)
+            map.removeLayer(largem)
+            map.removeLayer(other)
+            map.addLayer(fiftycm)
+        });
+
+        $("#50cm-1m").click(function() {
+            map.removeLayer(tencm)
+            map.removeLayer(twentycm)
+            map.removeLayer(fiftycm)
+            map.removeLayer(geojson)
+            map.removeLayer(fivem)
+            map.removeLayer(tenm)
+            map.removeLayer(twentym)
+            map.removeLayer(largem)
+            map.removeLayer(other)
+            map.addLayer(onem)
+        });
+
+        $("#1m-5m").click(function() {
+            map.removeLayer(tencm)
+            map.removeLayer(twentycm)
+            map.removeLayer(fiftycm)
+            map.removeLayer(onem)
+            map.removeLayer(geojson)
+            map.removeLayer(tenm)
+            map.removeLayer(twentym)
+            map.removeLayer(largem)
+            map.removeLayer(other)
+            map.addLayer(fivem)
+        });
+
+        $("#5m-10m").click(function() {
+            map.removeLayer(tencm)
+            map.removeLayer(twentycm)
+            map.removeLayer(fiftycm)
+            map.removeLayer(onem)
+            map.removeLayer(fivem)
+            map.removeLayer(geojson)
+            map.removeLayer(twentym)
+            map.removeLayer(largem)
+            map.removeLayer(other)
+            map.addLayer(tenm)
+        });
+
+        $("#10m-20m").click(function() {
+            map.removeLayer(tencm)
+            map.removeLayer(twentycm)
+            map.removeLayer(fiftycm)
+            map.removeLayer(onem)
+            map.removeLayer(fivem)
+            map.removeLayer(tenm)
+            map.removeLayer(geojson)
+            map.removeLayer(largem)
+            map.removeLayer(other)
+            map.addLayer(twentym)
+        });
+
+        $("#20m").click(function() {
+            map.removeLayer(tencm)
+            map.removeLayer(twentycm)
+            map.removeLayer(fiftycm)
+            map.removeLayer(onem)
+            map.removeLayer(fivem)
+            map.removeLayer(tenm)
+            map.removeLayer(twentym)
+            map.removeLayer(geojson)
+            map.removeLayer(other)
+            map.addLayer(largem)
+        });
+
+
+        $("#other").click(function() {
+            map.removeLayer(tencm)
+            map.removeLayer(twentycm)
+            map.removeLayer(fiftycm)
+            map.removeLayer(onem)
+            map.removeLayer(fivem)
+            map.removeLayer(tenm)
+            map.removeLayer(twentym)
+            map.removeLayer(largem)
+            map.removeLayer(geojson)
+            map.addLayer(other)
+        });
+
+
+    /*
+    var searchControl = new L.Control.Search({
+        layer: this.geojson,
+        propertyName: 'name',
+        marker: false,
+        moveToLocation: function(latlng, title, map) {
+            // map.fitBounds( latlng.layer.getBounds() );
+            var zoom = map.getBoundsZoom(latlng.layer.getBounds());
+            map.setView(latlng, zoom); // access the zoom
+        }
+    });
+
+    searchControl.on('search:locationfound', function(e) {
+        // console.log('search:locationfound', );
+        // map.removeLayer(this._markerSearch)
+        e.layer.setStyle({fillColor: '#3f0', color: '#0f0'});
+        if (e.layer._popup) {
+            e.layer.openPopup();
+            }
+
+        }).on('search:collapsed', function(e) {
+
+            featuresLayer.eachLayer(function(layer) { // restore feature color
+                featuresLayer.resetStyle(layer);
+            });
+        });
+
+        map.addControl( searchControl ); //initialize search control
+    */
+    
+
+
+    function handleClick(e) {
+            var html = '';
+            if (match.length) {
+            for (var i = 0; i < match.length; i++) {
+                html += propertyTable(match[i].feature.properties)
+                html += "</br>";
+            }
+        }
+
+        if (html) {
+            map.openPopup(html, e.latlng, maxWidth=300, maxHeight=200);
+        }
+    }
+
+    // create a simple table from the properties in a feature, like the
+    // database name or the coverage
+    function propertyTable(o) {
+        var out = []
+        for (var k in o) {
+            if (o[k].length > 0) {
+                out.push("<b>"+k+"</b>:<br />"+o[k]+"<br />");
+            }
+        }
+        var infos = out.join("");
+        return infos;
+    }
+
+
+    </script>
+</body>
+</html>
